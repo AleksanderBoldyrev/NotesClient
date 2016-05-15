@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import java.net.Inet4Address;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean _isNewNote = true;
     private boolean _isNoteDel = false;
     private int _mode = 0;
-    private int _selectedNote=0;
-    private int _selectedVersion=0;
+    private int _selectedNote = 0;
+    private int _selectedVersion = 0;
 
     private static Calendar cc;
     private DateFormat df;
@@ -64,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         _noteVersions = new ArrayList<String>();
 
         cc = Calendar.getInstance();
-        df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         verDf = new SimpleDateFormat("yy-MM-dd HH:mm");
 
         // находим список
@@ -77,14 +78,16 @@ public class MainActivity extends AppCompatActivity {
                                     int position, long id) {
                 _selectedNote = position;
                 noteSelected();
-            }});
+            }
+        });
 
         right.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View item,
                                     int position, long id) {
                 _selectedVersion = position;
                 versionSelected();
-            }});
+            }
+        });
 
         // создаем адаптер
         adapterNotes = new ArrayAdapter<String>(this,
@@ -145,20 +148,18 @@ public class MainActivity extends AppCompatActivity {
         GetTags();
         GetCaptions();
         adapterNotes.notifyDataSetChanged();
-        _isNewNote=true;
+        _isNewNote = true;
     }
 
-    private void noteSelected()
-    {
+    private void noteSelected() {
         _isNoteDel = true;
-        if (_notes.size()>0){
-            if (_notes.size()>0) {
+        if (_notes.size() > 0) {
+            if (_notes.size() > 0) {
                 //_selectedNote = left.getSelectedItemPosition();
                 SomeNoteSelected();
                 _mode = 1;
             }
-        }
-        else {
+        } else {
             _mode = 0;
             _tagsText.setText("");
             _captionText.setText("");
@@ -181,92 +182,86 @@ public class MainActivity extends AppCompatActivity {
         adapterVersions.notifyDataSetChanged();
     }
 
-    private void Delete()
-    {
+    private void Delete() {
         if (!_isNoteDel) {
             _noteText.setText("");
             _undoBuff = "";
-            if (_versions.size()>1) {
+            if (_versions.size() > 1) {
                 DeleteVersion();
                 adapterVersions.notifyDataSetChanged();
-            }
-            else {
+            } else {
                 DeleteNote();
+                _isNoteDel = true;
+                _mode = 0;
                 adapterVersions.notifyDataSetChanged();
                 adapterNotes.notifyDataSetChanged();
             }
-        }
-        else {
+        } else {
+            _mode = 0;
             DeleteNote();
+            _isNoteDel = true;
             adapterNotes.notifyDataSetChanged();
             adapterVersions.notifyDataSetChanged();
         }
     }
 
-    private void versionSelected()
-    {
+    private void versionSelected() {
         _isNoteDel = false;
-        if (_notes.get(_selectedNote).GetVersionsCount()>0)
-        {
-            if (_mode==1) {
+        if (_notes.get(_selectedNote).GetVersionsCount() > 0) {
+            if (_mode == 1) {
                 _isNewNote = false;
-               ///_selectedVersion = right.getSelectedItemPosition();
+                ///_selectedVersion = right.getSelectedItemPosition();
                 _noteText.setText(_versions.get(_selectedVersion).GetData());
                 _undoBuff = _noteText.getText().toString();
             }
-        }
-        else {
+        } else {
             _noteText.setText("");
         }
     }
 
-   private void SaveButtonClicked() {
+    private void SaveButtonClicked() {
+        if (_captionText.getText().length()==0)
+            _captionText.setText("Unnamed");
         _mode = 1;
         //String ss = cc.getTime().toString();
         if (_isNewNote) {
             _isNewNote = false;
             NewNote();
             //noteView.getSelectionModel().select(_client.getNotes().size()-1);
-            _isNoteDel=true;
+            _isNoteDel = true;
             //Refresh();
-        }
-        else {
+        } else {
             //SaveNote();
-            if (!_noteText.equals(_undoBuff)) {
+            if (!_noteText.getText().toString().equals(_undoBuff)) {
                 CreateVersion();
-            }
-            else
-            {
-                ChangeNoteCaption(_captionText.getText().toString(), _notes.get(_selectedNote).GetId());
+            } else {
                 AddTagsToNote(_tagsText.getText().toString(), _notes.get(_selectedNote).GetId());
+                ChangeNoteCaption(_captionText.getText().toString(), _notes.get(_selectedNote).GetId());
             }
             _isNoteDel = false;
         }
-       adapterNotes.notifyDataSetChanged();
-       adapterVersions.notifyDataSetChanged();
-       _undoBuff = _noteText.getText().toString();
+        adapterNotes.notifyDataSetChanged();
+        adapterVersions.notifyDataSetChanged();
+        _undoBuff = _noteText.getText().toString();
     }
 
     private void UndoButtonClicked() {
         _noteText.setText(_undoBuff);
     }
 
-    public String tagsToStr(ArrayList<Integer> tagIds)
-    {
+    public String tagsToStr(ArrayList<Integer> tagIds) {
         String res = "";
         int t = 0;
-        for (int i = 0; i<tagIds.size(); i++)
-        {
-            for (int j = 0; j<_tagList.size(); j++) {
+        for (int i = 0; i < tagIds.size(); i++) {
+            for (int j = 0; j < _tagList.size(); j++) {
                 if (_tagList.get(j).GetId() == tagIds.get(i))
-                    res+=_tagList.get(j).GetStrData()+" ";
+                    res += _tagList.get(j).GetStrData() + " ";
             }
         }
         return res;
     }
 
-    public void CreateNote()
-    {
+    public void CreateNote() {
         _tagsText.setText("");
         _captionText.setText("");
         _noteText.setText("");
@@ -274,6 +269,8 @@ public class MainActivity extends AppCompatActivity {
         _versions.clear();
         _isNewNote = true;
         _mode = 0;
+        adapterNotes.notifyDataSetChanged();
+        adapterVersions.notifyDataSetChanged();
     }
 
     public void Logout() {
@@ -290,19 +287,18 @@ public class MainActivity extends AppCompatActivity {
                         _versions.clear();
                         //return CommonData.SERV_YES;
                         finish();
-                    }
-                    else ShowDialog("Error", "Something went wrong while logging out! Try again later!");
+                    } else
+                        ShowDialog("Error", "Something went wrong while logging out! Try again later!");
                 }
         }
         //return CommonData.SERV_NO;
     }
 
-    public void ShowDialog(String title, String message)
-    {
-        AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(this);
+    public void ShowDialog(String title, String message) {
+        AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
         dlgAlert.setTitle(title);
         dlgAlert.setMessage(message);
-        dlgAlert.setPositiveButton("OK",new DialogInterface.OnClickListener() {
+        dlgAlert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 finish();
             }
@@ -362,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
     private void GetVersions() {
         _versions.clear();
         ArrayList<String> buf = new ArrayList<String>();
-        buf.add(_notes.get(_selectedNote).GetId()+"");
+        buf.add(_notes.get(_selectedNote).GetId() + "");
         String st = _parser.Build(buf, CommonData.O_GET_VERSIONS);
         String str = SocketWorker.serverIO(st);
         if (!str.equals("")) {
@@ -380,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (ParseException e) {
                                     e.printStackTrace();
                                 }
-                                _versions.add(new NotePrimitive(i/2, d, buf.get(i + 1)));
+                                _versions.add(new NotePrimitive(i / 2, d, buf.get(i + 1)));
                                 _noteVersions.add(verDf.format(d));
                             }
                     }
@@ -429,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
     //}
 
     //public void setmDate(final String mDate) {
-        //this._mDate.set(mDate);
+    //this._mDate.set(mDate);
     //}
 
     //public String getMDate() {
@@ -439,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
     // Get some info for selected note primitive: cDate - mDate - tags(ids)
     private void GetMoreNoteInfo() {
         ArrayList<String> buf = new ArrayList<String>();
-        buf.add(_notes.get(_selectedNote).GetId()+"");
+        buf.add(_notes.get(_selectedNote).GetId() + "");
         String st = _parser.Build(buf, CommonData.O_GET_MORE_INFO);
         String str = SocketWorker.serverIO(st);
         if (!str.equals("")) {
@@ -479,10 +475,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void CreateVersion() {
-        String newText =  _noteText.getText().toString();
-        Date newDate =  cc.getTime();
-        String tags =  _tagsText.getText().toString();
-        String newCaption =  _captionText.getText().toString();
+        String newText = _noteText.getText().toString();
+        Date newDate = cc.getTime();
+        String tags = _tagsText.getText().toString();
+        String newCaption = _captionText.getText().toString();
 
         ArrayList<String> buf = new ArrayList<String>();
         int verId = CommonData.SERV_NO;
@@ -517,6 +513,28 @@ public class MainActivity extends AppCompatActivity {
     private int AddTagsToNote(final String tagString, final int newNoteId) {
         String st;
         ArrayList<String> tagData = UpdateTagList(tagString);
+        /**/
+        StringBuilder stb = new StringBuilder();
+
+        if (_notes.size()>0)
+        if (_notes.get(_selectedNote).GetTags().size() > 0)
+            for (int i = 0; i < _notes.get(_selectedNote).GetTags().size(); i++) {
+                for (int j = 0; j < _tagList.size(); j++)
+                    if (_tagList.get(j).GetId() == _notes.get(_selectedNote).GetTags().get(i)) {
+                        stb.append(_tagList.get(j).GetStrData());
+                        if (!((j==_tagList.size()-1) && tagData.size() > 0))
+                        stb.append(CommonData.USER_INPUT_TAGS_SEP);
+                    }
+            }
+        if (tagData.size() > 0) {
+            for (int i = 0; i < tagData.size(); i++) {
+                stb.append(tagData.get(i));
+                if (i != tagData.size() - 1)
+                    stb.append(CommonData.USER_INPUT_TAGS_SEP);
+            }
+        }
+        _tagsText.setText(stb.toString());
+        /**/
         ArrayList<String> res = new ArrayList<String>();
         //Sync tags with server
         SyncTags();
@@ -562,6 +580,9 @@ public class MainActivity extends AppCompatActivity {
                 if (buff.get(0) == CommonData.O_RESPOND) {
                     if (buff.get(1) == CommonData.SERV_YES) {
                         _notes.get(_selectedNote).SetTitle(caption);
+                        _noteCaptions.set(_selectedNote, caption);
+                        adapterNotes.notifyDataSetChanged();
+                        adapterVersions.notifyDataSetChanged();
                         return CommonData.SERV_YES;
                     }
                 }
@@ -570,10 +591,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void NewNote() {
-        String newText =  _noteText.getText().toString();
-        Date newDate =  cc.getTime();
-        String newTags =  _tagsText.getText().toString();
-        String newCaption =  _captionText.getText().toString();
+        String newText = _noteText.getText().toString();
+        Date newDate = cc.getTime();
+        String newTags = _tagsText.getText().toString();
+        String newCaption = _captionText.getText().toString();
 
         ArrayList<String> res = new ArrayList<String>();
         int newNoteId = -1;
@@ -595,8 +616,7 @@ public class MainActivity extends AppCompatActivity {
                 if (buff.get(0) == CommonData.O_RESPOND) {
                     if (buff.get(1) == CommonData.SERV_YES) {
                         newNoteId = buff.get(2);
-                    }
-                    else
+                    } else
                         ShowDialog("Error", "New note hasn't been created. Please, try again later.");
                 }
         }
@@ -612,6 +632,17 @@ public class MainActivity extends AppCompatActivity {
         _noteVersions.add(verDf.format(newDate));
     }
 
+    private boolean IsTagNew(ArrayList<Integer> arr, String tag) {
+        if (arr.size() > 0)
+            for (int i = 0; i < arr.size(); i++) {
+                for (int j = 0; j < _tagList.size(); j++)
+                    if (_tagList.get(j).GetId() == arr.get(i))
+                        if (_tagList.get(j).GetStrData().equals(tag))
+                            return false;
+            }
+        return true;
+    }
+
     private ArrayList<String> UpdateTagList(final String tags) {
         int nextId = 0;
         ArrayList<String> res = new ArrayList<>();
@@ -623,12 +654,15 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < tags.length(); i++) {
                 if (tags.charAt(i) == CommonData.USER_INPUT_TAGS_SEP) {
                     if (str.length() > 0) {
-                        Tag t = new Tag(nextId, str.toString());
-                        if (!t.TagIsInArray(_tagList)) {
-                            nextId++;
-                            _tagList.add(t);
+                        if (!res.contains(str.toString()) && ((_notes.size() > 0 && IsTagNew(_notes.get(_selectedNote).GetTags(), str.toString())) || (_notes.size() == 0))) {
+                            Tag t = new Tag(nextId, str.toString());
+                            if (!t.TagIsInArray(_tagList)) {
+                                nextId++;
+                                _tagList.add(t);
+                            }
+                            res.add(str.toString());
+                            //str.delete(0, str.length());
                         }
-                        res.add(str.toString());
                         str.delete(0, str.length());
                     }
                 } else {
@@ -636,12 +670,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if (str.length() > 0) {
-                Tag t = new Tag(nextId, str.toString());
-                if (!t.TagIsInArray(_tagList)) {
-                    nextId++;
-                    _tagList.add(t);
+                if (!res.contains(str.toString()) && ((_notes.size() > 0 && IsTagNew(_notes.get(_selectedNote).GetTags(), str.toString())) || (_notes.size() == 0))) {
+                    Tag t = new Tag(nextId, str.toString());
+                    if (!t.TagIsInArray(_tagList)) {
+                        nextId++;
+                        _tagList.add(t);
+                    }
+                    res.add(str.toString());
+                    //str.delete(0, str.length());
                 }
-                res.add(str.toString());
+                str.delete(0, str.length());
             }
         }
         return res;
@@ -704,7 +742,8 @@ public class MainActivity extends AppCompatActivity {
                             _tagsText.setText("");
                             _captionText.setText("");
                             _noteCaptions.remove(_selectedNote);
-                            if (_notes.size()>0) {
+                            _noteVersions.clear();
+                            if (_notes.size() > 0 && _selectedNote > 0) {
                                 _selectedNote--;
                                 SomeNoteSelected();
                             }
