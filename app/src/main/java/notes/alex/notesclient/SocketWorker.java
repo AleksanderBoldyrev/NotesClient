@@ -19,6 +19,12 @@ public final class SocketWorker implements Runnable {
     private static BufferedReader _in;
     private static PrintWriter _out;
     private static ServerSendTask _serverIO;
+    private String _host;
+
+    public SocketWorker(String h)
+    {
+        _host = h;
+    }
 
     public static String serverIO(final String str)
     {
@@ -39,7 +45,7 @@ public final class SocketWorker implements Runnable {
     public void run() {
         _serverIO = new ServerSendTask();
         try {
-            _sock = new Socket(CommonData.HOST, CommonData.PORT);
+            _sock = new Socket(_host, CommonData.PORT);
             _in = new BufferedReader(new InputStreamReader(_sock.getInputStream()));
             _out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(_sock.getOutputStream())), true);//(_sock.getOutputStream());
         } catch (IOException e) {

@@ -77,6 +77,7 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
     // UI references.
     //private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
+    private EditText mHostView;
     //private View mProgressView;
     private EditText mLoginFormView;
 
@@ -87,7 +88,8 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
         // Set up the login form.
         mLoginFormView = (EditText) findViewById(R.id.login);
         //populateAutoComplete();
-
+        mHostView = (EditText) findViewById(R.id.host);
+        mHostView.setText(CommonData.HOST);
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -136,92 +138,21 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
                 finish();
             }
         });
-
-        //mLoginFormView = findViewById(R.id.login_form);
-
-        _socketWorker = new SocketWorker();
-        _swThread = new Thread(_socketWorker);
-        _swThread.start();
-
-        //ShowDialog("Test", "Test");
-        //_serverIO = new ServerSendTask();
     }
 
-    /*private void populateAutoComplete() {
-        if (!mayRequestContacts()) {
-            return;
+    private void Init()
+    {
+        if (_socketWorker==null) {
+            String host = mHostView.getText().toString();
+            _socketWorker = new SocketWorker(host);
+            _swThread = new Thread(_socketWorker);
+            _swThread.start();
         }
-
-        //getLoaderManager().initLoader(0, null, this);
-    }*/
-
-    /*private boolean mayRequestContacts() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
-        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        @TargetApi(Build.VERSION_CODES.M)
-                        public void onClick(View v) {
-                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-                        }
-                    });
-        } else {
-            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-        }
-        return false;
-    }*/
-
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-   /* @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_READ_CONTACTS) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                populateAutoComplete();
-            }
-        }
-    }*/
-
-    /*public int Login(String _log, String _passw) {
-        int suc = CommonData.SERV_NO;
-        ArrayList<String> s = new ArrayList<String>();
-        s.add(_log);
-        s.add(_passw);
-
-        String st = _parser.Build(s, CommonData.O_LOGIN);
-        SendToServer(st);
-        String str = WaitForServer();
-
-        if (!str.equals("")) {
-            ArrayList<Integer> buff = _parser.ParseListOfInteger(str);
-            if (buff.size() > 1)
-                if (buff.get(0) == CommonData.O_RESPOND) {
-                    if (buff.get(1) == CommonData.SERV_YES) {
-                        _login = _log;
-                        _pass = _passw;
-                        _isAuth = true;
-                        //_stage = 0;
-                        //LoadBasicDataFromServer();
-                        suc = CommonData.SERV_YES;
-                        _lastLoginRes = true;
-                    }
-                    else
-                        _lastLoginRes = false;
-                }
-        }
-        return suc;
-    }*/
+    }
 
     private void createUser()
     {
+        Init();
         String _log = mLoginFormView.getText().toString();
         String _passw = mPasswordView.getText().toString();
         int suc = CommonData.SERV_NO;
@@ -235,8 +166,6 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
             if (buff.size() > 1)
                 if (buff.get(0) == CommonData.O_RESPOND) {
                     if (buff.get(1) == CommonData.SERV_YES) {
-                        //_isAuth = true;
-                        //ShowDialog("User created!", "All fine. Try to login!");
                         attemptLogin();
                     }
                 }
@@ -245,21 +174,6 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
             ShowDialog("User was not created!", "Sorry. Try again later!");
         //return suc;         //-----------------------------------------------------------------------------------------
     }
-
-    /*private String serverIO(final String str)
-    {
-        String res = new String();
-        _serverIO = new ServerSendTask();
-              _serverIO.execute(str);
-        try {
-            res = _serverIO.get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-        return res;
-    }*/
 
     public void ShowDialog(String title, String message)
     {
@@ -277,6 +191,7 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
 
     private void removeUser()
     {
+        Init();
         String log = mLoginFormView.getText().toString();
         String pass = mPasswordView.getText().toString();
         int res = CommonData.SERV_NO;
@@ -309,7 +224,7 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-
+        Init();
         String _log = mLoginFormView.getText().toString();
         String _passw = mPasswordView.getText().toString();
         int suc = CommonData.SERV_NO;
@@ -325,16 +240,8 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
             if (buff.size() > 1)
                 if (buff.get(0) == CommonData.O_RESPOND) {
                     if (buff.get(1) == CommonData.SERV_YES) {
-                        //_login = _log;
-                        //_pass = _passw;
-                        //_isAuth = true;
-                        //_stage = 0;
-                        //LoadBasicDataFromServer();
                         suc = CommonData.SERV_YES;
                         _lastLoginRes = true;
-                        //Intent mainAct = new Intent(LoginActivity.this, MainActivity.class);
-                        // translate variables to main activity
-                        //startActivity(mainAct);
                     } else
                         _lastLoginRes = false;
                 }
@@ -349,50 +256,6 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
         {
             ShowDialog("Login error", "Wrong user data! Please, try again!");
         }
-        /*if (mAuthTask != null) {
-            return;
-        }
-
-        // Reset errors.
-        mEmailView.setError(null);
-        mPasswordView.setError(null);
-
-        // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
-
-        boolean cancel = false;
-        View focusView = null;
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
-            cancel = true;
-        }
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-        } else {
-            // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
-            showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
-        }*/
     }
 
     private boolean isEmailValid(String email) {
@@ -405,59 +268,5 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
         return password.length() > 4;
     }
 
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-   /*
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return new CursorLoader(this,
-                // Retrieve data rows for the device user's 'profile' contact.
-                Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
-                        ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
-
-                // Select only email addresses.
-                ContactsContract.Contacts.Data.MIMETYPE +
-                        " = ?", new String[]{ContactsContract.CommonDataKinds.Email
-                .CONTENT_ITEM_TYPE},
-
-                // Show primary email addresses first. Note that there won't be
-                // a primary email address if the user hasn't specified one.
-                ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
-    }
-
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        List<String> emails = new ArrayList<>();
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            emails.add(cursor.getString(ProfileQuery.ADDRESS));
-            cursor.moveToNext();
-        }
-
-        addEmailsToAutoComplete(emails);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-
-    }
-
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(LoginActivity.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-
-        mEmailView.setAdapter(adapter);
-    }
-
-*/
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
 }
 
