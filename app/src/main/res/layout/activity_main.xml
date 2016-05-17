@@ -73,7 +73,8 @@
                 android:divider="#000000"
                 android:drawSelectorOnTop="false"
                 android:dividerHeight="1dp"
-                android:background="@android:drawable/screen_background_dark_transparent" />
+                android:background="@android:drawable/screen_background_dark_transparent"
+                android:fastScrollEnabled="true" />
 
             <ListView
                 android:layout_width="match_parent"
@@ -82,7 +83,8 @@
                 android:choiceMode="singleChoice"
                 android:divider="#000000"
                 android:background="#cf7119"
-                android:dividerHeight="1dp" />
+                android:dividerHeight="1dp"
+                android:fastScrollEnabled="true" />
         </LinearLayout>
 
         <LinearLayout

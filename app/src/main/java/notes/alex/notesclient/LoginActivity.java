@@ -57,6 +57,7 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
     private SocketWorker _socketWorker;
     private Thread _swThread;
 
+    private String _lastHost;
      private int _selectedNote;
     private int _selectedVersion;
     private boolean _lastLoginRes;
@@ -90,6 +91,7 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
         //populateAutoComplete();
         mHostView = (EditText) findViewById(R.id.host);
         mHostView.setText(CommonData.HOST);
+        _lastHost = CommonData.HOST;
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -140,39 +142,51 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
         });
     }
 
-    private void Init()
+    private boolean Init()
     {
-        if (_socketWorker==null) {
-            String host = mHostView.getText().toString();
+        String host = mHostView.getText().toString();
+        if (_socketWorker==null || (_socketWorker!=null && !_socketWorker._isReady) || !host.equals(_lastHost)) {
             _socketWorker = new SocketWorker(host);
             _swThread = new Thread(_socketWorker);
             _swThread.start();
+            try {
+                sleep(512);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (_socketWorker._isReady)
+                return true;
+            else {
+                ShowDialog("Error", "Could not connect to server!");
+                return false;
+            }
         }
+        return true;
     }
 
     private void createUser()
     {
-        Init();
-        String _log = mLoginFormView.getText().toString();
-        String _passw = mPasswordView.getText().toString();
-        int suc = CommonData.SERV_NO;
-        ArrayList<String> s = new ArrayList<String>();
-        s.add(_log);
-        boolean add = s.add(_passw);
-        String st = _parser.Build(s, CommonData.O_CREATE_U);
-        String str = SocketWorker.serverIO(st);
-        if (!str.equals("")) {
-            ArrayList<Integer> buff = _parser.ParseListOfInteger(str);
-            if (buff.size() > 1)
-                if (buff.get(0) == CommonData.O_RESPOND) {
-                    if (buff.get(1) == CommonData.SERV_YES) {
-                        attemptLogin();
+        if (Init()) {
+            String _log = mLoginFormView.getText().toString();
+            String _passw = mPasswordView.getText().toString();
+            int suc = CommonData.SERV_NO;
+            ArrayList<String> s = new ArrayList<String>();
+            s.add(_log);
+            boolean add = s.add(_passw);
+            String st = _parser.Build(s, CommonData.O_CREATE_U);
+            String str = SocketWorker.serverIO(st);
+            if (!str.equals("")) {
+                ArrayList<Integer> buff = _parser.ParseListOfInteger(str);
+                if (buff.size() > 1)
+                    if (buff.get(0) == CommonData.O_RESPOND) {
+                        if (buff.get(1) == CommonData.SERV_YES) {
+                            attemptLogin();
+                        }
                     }
-                }
+            }
+            if (suc == CommonData.SERV_NO)
+                ShowDialog("User was not created!", "Sorry. Try again later!");
         }
-        if (suc == CommonData.SERV_NO)
-            ShowDialog("User was not created!", "Sorry. Try again later!");
-        //return suc;         //-----------------------------------------------------------------------------------------
     }
 
     public void ShowDialog(String title, String message)
@@ -191,25 +205,25 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
 
     private void removeUser()
     {
-        Init();
-        String log = mLoginFormView.getText().toString();
-        String pass = mPasswordView.getText().toString();
-        int res = CommonData.SERV_NO;
-        ArrayList<String> buf = new ArrayList<String>();
-        buf.add(log);
-        buf.add(pass);
-        String st = _parser.Build(buf, CommonData.O_DELETE_U);
-        String str = SocketWorker.serverIO(st);
-        if (!str.equals("")) {
-            ArrayList<Integer> buff = _parser.ParseListOfInteger(str);
-            if (buff.size() > 1)
-                if (buff.get(0) == CommonData.O_RESPOND) {
-                    if (buff.get(1) == CommonData.SERV_YES) {
-                        res = CommonData.SERV_YES;
+        if (Init()) {
+            String log = mLoginFormView.getText().toString();
+            String pass = mPasswordView.getText().toString();
+            int res = CommonData.SERV_NO;
+            ArrayList<String> buf = new ArrayList<String>();
+            buf.add(log);
+            buf.add(pass);
+            String st = _parser.Build(buf, CommonData.O_DELETE_U);
+            String str = SocketWorker.serverIO(st);
+            if (!str.equals("")) {
+                ArrayList<Integer> buff = _parser.ParseListOfInteger(str);
+                if (buff.size() > 1)
+                    if (buff.get(0) == CommonData.O_RESPOND) {
+                        if (buff.get(1) == CommonData.SERV_YES) {
+                            res = CommonData.SERV_YES;
+                        }
                     }
-                }
+            }
         }
-        //return res;            //-----------------------------------------------------------------------------------------
     }
 
     private void aboutCalled()
@@ -224,37 +238,35 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-        Init();
-        String _log = mLoginFormView.getText().toString();
-        String _passw = mPasswordView.getText().toString();
-        int suc = CommonData.SERV_NO;
-        ArrayList<String> s = new ArrayList<String>();
-        s.add(_log);
-        s.add(_passw);
+        if (Init()) {
+            String _log = mLoginFormView.getText().toString();
+            String _passw = mPasswordView.getText().toString();
+            int suc = CommonData.SERV_NO;
+            ArrayList<String> s = new ArrayList<String>();
+            s.add(_log);
+            s.add(_passw);
 
-        String st = _parser.Build(s, CommonData.O_LOGIN);
-        String str = SocketWorker.serverIO(st);
+            String st = _parser.Build(s, CommonData.O_LOGIN);
+            String str = SocketWorker.serverIO(st);
 
-        if (!str.equals("")) {
-            ArrayList<Integer> buff = _parser.ParseListOfInteger(str);
-            if (buff.size() > 1)
-                if (buff.get(0) == CommonData.O_RESPOND) {
-                    if (buff.get(1) == CommonData.SERV_YES) {
-                        suc = CommonData.SERV_YES;
-                        _lastLoginRes = true;
-                    } else
-                        _lastLoginRes = false;
-                }
-        }
+            if (!str.equals("")) {
+                ArrayList<Integer> buff = _parser.ParseListOfInteger(str);
+                if (buff.size() > 1)
+                    if (buff.get(0) == CommonData.O_RESPOND) {
+                        if (buff.get(1) == CommonData.SERV_YES) {
+                            suc = CommonData.SERV_YES;
+                            _lastLoginRes = true;
+                        } else
+                            _lastLoginRes = false;
+                    }
+            }
 
-        if (suc == CommonData.SERV_YES)
-        {
-            Intent mainAct = new Intent(this, MainActivity.class);
-            startActivity(mainAct);
-        }
-        else
-        {
-            ShowDialog("Login error", "Wrong user data! Please, try again!");
+            if (suc == CommonData.SERV_YES) {
+                Intent mainAct = new Intent(this, MainActivity.class);
+                startActivity(mainAct);
+            } else {
+                ShowDialog("Login error", "Wrong user data! Please, try again!");
+            }
         }
     }
 

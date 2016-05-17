@@ -195,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 _mode = 0;
                 adapterVersions.notifyDataSetChanged();
                 adapterNotes.notifyDataSetChanged();
+                _isNewNote=true;
             }
         } else {
             _mode = 0;
@@ -202,6 +203,8 @@ public class MainActivity extends AppCompatActivity {
             _isNoteDel = true;
             adapterNotes.notifyDataSetChanged();
             adapterVersions.notifyDataSetChanged();
+            if (_notes.size()==0)
+                _isNewNote=true;
         }
     }
 
@@ -227,15 +230,14 @@ public class MainActivity extends AppCompatActivity {
         if (_isNewNote) {
             _isNewNote = false;
             NewNote();
-            //noteView.getSelectionModel().select(_client.getNotes().size()-1);
+            _selectedNote = _noteCaptions.size()-1;
             _isNoteDel = true;
-            //Refresh();
         } else {
-            //SaveNote();
             if (!_noteText.getText().toString().equals(_undoBuff)) {
                 CreateVersion();
             } else {
-                AddTagsToNote(_tagsText.getText().toString(), _notes.get(_selectedNote).GetId());
+                if (_tagsText.getText().toString().length()>0)
+                    AddTagsToNote(_tagsText.getText().toString(), _notes.get(_selectedNote).GetId());
                 ChangeNoteCaption(_captionText.getText().toString(), _notes.get(_selectedNote).GetId());
             }
             _isNoteDel = false;
@@ -285,7 +287,6 @@ public class MainActivity extends AppCompatActivity {
                         //_isAuth = false;
                         _notes.clear();
                         _versions.clear();
-                        //return CommonData.SERV_YES;
                         finish();
                     } else
                         ShowDialog("Error", "Something went wrong while logging out! Try again later!");
@@ -416,22 +417,6 @@ public class MainActivity extends AppCompatActivity {
         return new String();
     }
 
-    //public void setCDate(final String cDate) {
-    //    this._cDate.set(cDate);
-    //}
-
-    //public String getCDate() {
-    //    return this._cDate;
-    //}
-
-    //public void setmDate(final String mDate) {
-    //this._mDate.set(mDate);
-    //}
-
-    //public String getMDate() {
-    //    return this._mDate;
-    //}
-
     // Get some info for selected note primitive: cDate - mDate - tags(ids)
     private void GetMoreNoteInfo() {
         ArrayList<String> buf = new ArrayList<String>();
@@ -511,55 +496,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int AddTagsToNote(final String tagString, final int newNoteId) {
-        String st;
-        ArrayList<String> tagData = UpdateTagList(tagString);
+        //if (tagString.length()>0) {
+            String st;
+            ArrayList<String> tagData = UpdateTagList(tagString);
         /**/
-        StringBuilder stb = new StringBuilder();
+            StringBuilder stb = new StringBuilder();
 
-        if (_notes.size()>0)
-        if (_notes.get(_selectedNote).GetTags().size() > 0)
-            for (int i = 0; i < _notes.get(_selectedNote).GetTags().size(); i++) {
-                for (int j = 0; j < _tagList.size(); j++)
-                    if (_tagList.get(j).GetId() == _notes.get(_selectedNote).GetTags().get(i)) {
-                        stb.append(_tagList.get(j).GetStrData());
-                        if (!((j==_tagList.size()-1) && tagData.size() > 0))
+            if (_notes.size() > 0)
+                if (_notes.get(_selectedNote).GetTags().size() > 0)
+                    for (int i = 0; i < _notes.get(_selectedNote).GetTags().size(); i++) {
+                        for (int j = 0; j < _tagList.size(); j++)
+                            if (_tagList.get(j).GetId() == _notes.get(_selectedNote).GetTags().get(i)) {
+                                stb.append(_tagList.get(j).GetStrData());
+                                if (!((j == _tagList.size() - 1) && tagData.size() > 0))
+                                    stb.append(CommonData.USER_INPUT_TAGS_SEP);
+                            }
+                    }
+            if (tagData.size() > 0) {
+                for (int i = 0; i < tagData.size(); i++) {
+                    stb.append(tagData.get(i));
+                    if (i != tagData.size() - 1)
                         stb.append(CommonData.USER_INPUT_TAGS_SEP);
-                    }
-            }
-        if (tagData.size() > 0) {
-            for (int i = 0; i < tagData.size(); i++) {
-                stb.append(tagData.get(i));
-                if (i != tagData.size() - 1)
-                    stb.append(CommonData.USER_INPUT_TAGS_SEP);
-            }
-        }
-        _tagsText.setText(stb.toString());
-        /**/
-        ArrayList<String> res = new ArrayList<String>();
-        //Sync tags with server
-        SyncTags();
-        // Add tags to created note
-        res.clear();
-        //Convert tags of new note to tag ids
-        res.add(newNoteId + "");
-        ArrayList<Integer> tags = ConvertTagsIntoIds(tagData);
-        if (tags.size() > 0)
-            for (int i = 0; i < tags.size(); i++) {
-                res.add(tags.get(i).toString());
-            }
-
-        st = this._parser.Build(res, CommonData.O_ADD_TAGS_TO_NOTE);
-        String str = SocketWorker.serverIO(st);
-        if (!st.equals("")) {
-            ArrayList<Integer> buff = this._parser.ParseListOfInteger(st);
-            if (buff.size() > 1)
-                if (buff.get(0) == CommonData.O_RESPOND) {
-                    if (buff.get(1) == CommonData.SERV_YES) {
-                        if (_notes.size() > 0) _notes.get(_selectedNote).SetTags(tags);
-                        return CommonData.SERV_YES;
-                    }
                 }
-        }
+            }
+            _tagsText.setText(stb.toString());
+        /**/
+            ArrayList<String> res = new ArrayList<String>();
+            //Sync tags with server
+            SyncTags();
+            // Add tags to created note
+            res.clear();
+            //Convert tags of new note to tag ids
+            res.add(newNoteId + "");
+            ArrayList<Integer> tags = ConvertTagsIntoIds(tagData);
+            if (tags.size() > 0)
+                for (int i = 0; i < tags.size(); i++) {
+                    res.add(tags.get(i).toString());
+                }
+            if (tags.size()>0) {
+                st = this._parser.Build(res, CommonData.O_ADD_TAGS_TO_NOTE);
+                String str = SocketWorker.serverIO(st);
+                if (!st.equals("")) {
+                    ArrayList<Integer> buff = this._parser.ParseListOfInteger(st);
+                    if (buff.size() > 1)
+                        if (buff.get(0) == CommonData.O_RESPOND) {
+                            if (buff.get(1) == CommonData.SERV_YES) {
+                                if (_notes.size() > 0) _notes.get(_selectedNote).SetTags(tags);
+                                return CommonData.SERV_YES;
+                            }
+                        }
+                }
+            }
+            else
+                return CommonData.SERV_YES;
         return CommonData.SERV_NO;
     }
 
@@ -630,6 +619,7 @@ public class MainActivity extends AppCompatActivity {
         _notes.add(nm);
         _noteCaptions.add(newCaption);
         _noteVersions.add(verDf.format(newDate));
+        //_selectedNote++;
     }
 
     private boolean IsTagNew(ArrayList<Integer> arr, String tag) {

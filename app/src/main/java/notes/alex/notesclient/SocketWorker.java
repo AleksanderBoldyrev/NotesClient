@@ -21,6 +21,8 @@ public final class SocketWorker implements Runnable {
     private static ServerSendTask _serverIO;
     private String _host;
 
+    public static boolean _isReady = false;
+
     public SocketWorker(String h)
     {
         _host = h;
@@ -48,75 +50,14 @@ public final class SocketWorker implements Runnable {
             _sock = new Socket(_host, CommonData.PORT);
             _in = new BufferedReader(new InputStreamReader(_sock.getInputStream()));
             _out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(_sock.getOutputStream())), true);//(_sock.getOutputStream());
+            if (_sock!=null)
+                _isReady = true;
         } catch (IOException e) {
             e.printStackTrace();
+            _isReady = false;
         }
-        /*String str = new String();
-        boolean foo = true;
-        while (true)
-        {
-            // trying to read data
-            try {
-                str = _in.readLine();
-            } catch (IOException e) {
-                e.printStackTrace();
-                foo = false;
-            }
-            if (str.length()>0) {
-                System.out.println("Client received: " + str);
-                setOutBuf(str);
-            }
-
-            // trying to send something
-            str = getInBuf();
-            if (str.length()>0)
-            {
-                System.out.println("Client send to server:" + str);
-                _out.println(str);
-                str = "";
-                setInBuf(str);
-            }
-            try {
-                sleep(CommonData.SLEEP_TIME);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }*/
     }
 
-    /*public synchronized String getInBuf()
-    {
-        return inBuf;
-    }
-
-    public synchronized String getOutBuf()
-    {
-        return outBuf;
-    }
-
-    public synchronized void setInBuf(final String str)
-    {
-        inBuf = str;
-    }
-
-    public synchronized void setOutBuf(final String str)
-    {
-        outBuf = str;
-    }
-
-    public String ReceiveData() {
-        String str = "";
-        try {
-
-            str = _in.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (str.length()>0)
-            System.out.println("Client received: " + str);
-        return str;
-    }
-*/
     public static void SendToServer(String str) {
         System.out.println("Client send to server:" + str);
 
