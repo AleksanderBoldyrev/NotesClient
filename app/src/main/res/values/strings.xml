@@ -17,4 +17,5 @@
     <string name="signin_remove">Remove user</string>
     <string name="about_button">About</string>
     <string name="about_return_button">Back</string>
+    <string name="prompt_host">192.168.0.106</string>
 </resources>
