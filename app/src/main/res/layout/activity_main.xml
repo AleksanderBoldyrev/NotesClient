@@ -31,16 +31,16 @@
 
             <Button
                 style="?android:attr/buttonStyleSmall"
-                android:layout_width="65dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Note"
+                android:text="New"
                 android:id="@+id/newNoteButton" />
 
             <Button
                 style="?android:attr/buttonStyleSmall"
-                android:layout_width="80dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Delete Note"
+                android:text="Delete"
                 android:id="@+id/deleteNoteButton" />
 
             <Button

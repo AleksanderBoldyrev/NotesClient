@@ -107,7 +107,8 @@
                 android:id="@+id/noteDataView"
                 android:layout_weight="1.03"
                 android:text="Note here"
-                android:background="#e8db1d" />
+                android:background="#e8db1d"
+                android:autoText="false" />
 
             <EditText
                 android:layout_width="232dp"
