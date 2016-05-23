@@ -223,8 +223,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void SaveButtonClicked() {
-        if (_captionText.getText().length()==0)
-            _captionText.setText("Unnamed");
+        if (_captionText.getText().length()==0) {
+            _captionText.setText(cc.getTime().toString());
+        }
         _mode = 1;
         //String ss = cc.getTime().toString();
         if (_isNewNote) {
@@ -496,22 +497,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int AddTagsToNote(final String tagString, final int newNoteId) {
-        //if (tagString.length()>0) {
-            String st;
-            ArrayList<String> tagData = UpdateTagList(tagString);
+        ArrayList<String> tagData = new ArrayList<String>();
+        String st;
+        if (tagString.length()>0) {
+            tagData = UpdateTagList(tagString);
+        }
+        else
+            tagData.clear();
         /**/
             StringBuilder stb = new StringBuilder();
-
-            if (_notes.size() > 0)
-                if (_notes.get(_selectedNote).GetTags().size() > 0)
-                    for (int i = 0; i < _notes.get(_selectedNote).GetTags().size(); i++) {
-                        for (int j = 0; j < _tagList.size(); j++)
-                            if (_tagList.get(j).GetId() == _notes.get(_selectedNote).GetTags().get(i)) {
-                                stb.append(_tagList.get(j).GetStrData());
-                                if (!((j == _tagList.size() - 1) && tagData.size() > 0))
-                                    stb.append(CommonData.USER_INPUT_TAGS_SEP);
-                            }
-                    }
             if (tagData.size() > 0) {
                 for (int i = 0; i < tagData.size(); i++) {
                     stb.append(tagData.get(i));
@@ -533,8 +527,9 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < tags.size(); i++) {
                     res.add(tags.get(i).toString());
                 }
-            if (tags.size()>0) {
-                st = this._parser.Build(res, CommonData.O_ADD_TAGS_TO_NOTE);
+            //if (tags.size()>0)
+            {
+                st = this._parser.Build(res, CommonData.O_SET_TAGS_TO_NOTE);
                 String str = SocketWorker.serverIO(st);
                 if (!st.equals("")) {
                     ArrayList<Integer> buff = this._parser.ParseListOfInteger(st);
@@ -547,8 +542,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                 }
             }
-            else
-                return CommonData.SERV_YES;
+            //else
+            //    return CommonData.SERV_YES;
         return CommonData.SERV_NO;
     }
 
@@ -644,14 +639,15 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < tags.length(); i++) {
                 if (tags.charAt(i) == CommonData.USER_INPUT_TAGS_SEP) {
                     if (str.length() > 0) {
-                        if (!res.contains(str.toString()) && ((_notes.size() > 0 && IsTagNew(_notes.get(_selectedNote).GetTags(), str.toString())) || (_notes.size() == 0))) {
-                            Tag t = new Tag(nextId, str.toString());
-                            if (!t.TagIsInArray(_tagList)) {
-                                nextId++;
-                                _tagList.add(t);
+                        if (!res.contains(str.toString())) {
+                            if ((_notes.size() > 0 && IsTagNew(_notes.get(_selectedNote).GetTags(), str.toString())) || (_notes.size() == 0)) {
+                                Tag t = new Tag(nextId, str.toString());
+                                if (!t.TagIsInArray(_tagList)) {
+                                    nextId++;
+                                    _tagList.add(t);
+                                }
                             }
                             res.add(str.toString());
-                            //str.delete(0, str.length());
                         }
                         str.delete(0, str.length());
                     }
@@ -660,14 +656,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if (str.length() > 0) {
-                if (!res.contains(str.toString()) && ((_notes.size() > 0 && IsTagNew(_notes.get(_selectedNote).GetTags(), str.toString())) || (_notes.size() == 0))) {
-                    Tag t = new Tag(nextId, str.toString());
-                    if (!t.TagIsInArray(_tagList)) {
-                        nextId++;
-                        _tagList.add(t);
+                if (!res.contains(str.toString())) {
+                    if ((_notes.size() > 0 && IsTagNew(_notes.get(_selectedNote).GetTags(), str.toString())) || (_notes.size() == 0)) {
+                        Tag t = new Tag(nextId, str.toString());
+                        if (!t.TagIsInArray(_tagList)) {
+                            nextId++;
+                            _tagList.add(t);
+                        }
                     }
                     res.add(str.toString());
-                    //str.delete(0, str.length());
                 }
                 str.delete(0, str.length());
             }

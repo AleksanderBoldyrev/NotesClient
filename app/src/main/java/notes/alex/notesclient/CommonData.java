@@ -53,4 +53,5 @@ public final class CommonData {
     public static final int O_GET_VERSIONS = 18;                        // Request for getting note's versions operation.
     public static final int O_GET_MORE_INFO = 19;                       // Request for getting updated info operation.
     public static final int O_CHANGE_CAPTION = 20;                      // Request for changing the caption operation.
+    public static final int O_SET_TAGS_TO_NOTE = 21;                    // Request for adding tags to the note operation.
 }
